@@ -7,6 +7,9 @@ class LedgerProvider {
   constructor(opts) {
     this.chainId = opts.chainId
     this.rpcUrl = opts.rpcUrl
+    
+    // is the ledger using the Ethereum app or the RSK app:
+    this.paths = opts.chainId === 30 ? ["44'/137'/x'/0/0"] : ["44'/60'/x'/0/0"]
   }
 
   connect() {
@@ -15,12 +18,12 @@ class LedgerProvider {
       const engine = new ProviderEngine();
       const getTransport = () => TransportWebUSB.create();
       const ledger = createLedgerSubprovider(getTransport, {
-          networkId: 31,
+          networkId: this.chainId,
           accountsLength: 1, // get a single account
-          // paths: ["44'/60'/x'/0/0", "44'/60'/0'/x"],
+          paths: this.paths,
       });
       engine.addProvider(ledger);
-      engine.addProvider(new RpcSubprovider({ rpcUrl: 'https://public-node.testnet.rsk.co' }));
+      engine.addProvider(new RpcSubprovider({ rpcUrl: this.rpcUrl }));
       engine.start();
 
       // this will prompt the window to connect:
