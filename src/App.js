@@ -22,6 +22,8 @@ function App() {
 
   const connectToLedger = () => {
     setError(null)
+    setChainId(null)
+    setAccount(null)
 
     const connect = useTestnet ? ledgerConnectTestNet : ledgerConnectMainnet
 
