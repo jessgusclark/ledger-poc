@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Eth from 'ethjs-query'
+import Eth from 'ethjs'
 
 import './App.css';
 import LedgerConnectProvider from './LedgerConnectProvider'
@@ -19,6 +19,8 @@ function App() {
   const [chainId, setChainId] = useState('')
   const [error, setError] = useState(null)
   const [useTestnet, setUseTestnet] = useState(true)
+  
+  const [provider, setProvider] = useState(null)
 
   const connectToLedger = () => {
     setError(null)
@@ -28,14 +30,27 @@ function App() {
     const connect = useTestnet ? ledgerConnectTestNet : ledgerConnectMainnet
 
     connect.connect()
-      .then(response => {
-        const { provider, address } = response
-        const ethQuery = new Eth(provider)
+      .then(provider => {
+        // const { , address } = response
+        const ethjs = new Eth(provider)
 
-        setAccount(address[0])
-        ethQuery.net_version().then(chainId => setChainId(chainId))
+        // provider.sendAsync({method: 'eth_accounts' }, (response) => console.log(response))
+        // setAccount(address[0])
+        ethjs.accounts().then(accounts => setAccount(accounts[0]))
+        ethjs.net_version().then(chainId => setChainId(chainId))
+
+        console.log(ethjs)
+
+        setProvider(ethjs)
       })
       .catch(err => setError(err.toString()))
+  }
+
+  const signMessage = () => {
+    console.log('let us sign')
+    console.log(provider)
+    // provider.send({ method: 'personal_sign', params: ['Hello World!', account] })
+    provider.personal_sign('Hello World', account)
   }
 
   return (
@@ -48,6 +63,12 @@ function App() {
       <p>accounts: {account}</p>
       <p>chainId: {chainId}</p>
       {error && <p><strong>Error: </strong> {error} </p>}
+      <hr/>
+      {provider && (
+        <div>
+          <button onClick={signMessage}>Sign message</button>
+        </div>
+      )}
     </div>
   );
 }
