@@ -25,7 +25,7 @@ class LedgerProvider {
 
       // this will prompt the window to connect:
       ledger.getAccounts((error, response) => {
-        return error ? reject(error) : resolve(engine)
+        return error ? reject(error) : resolve({ address: response, provider: engine })
       })
     })
   }

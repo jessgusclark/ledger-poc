@@ -14,10 +14,11 @@ function App() {
   const [chainId, setChainId] = useState('')
 
   const connectToLedger = () => {
-    ledgerConnect.connect().then(provider => {
+    ledgerConnect.connect().then(response => {
+      const { provider, address } = response
       const ethQuery = new Eth(provider)
 
-      ethQuery.accounts().then(accounts => accounts[0] && setAccount(accounts[0]))
+      setAccount(address[0])
       ethQuery.net_version().then(chainId => setChainId(chainId))
     })
   }
