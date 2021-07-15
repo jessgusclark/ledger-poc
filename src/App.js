@@ -12,15 +12,20 @@ const ledgerConnect = new LedgerConnectProvider({
 function App() {
   const [account, setAccount] = useState('')
   const [chainId, setChainId] = useState('')
+  const [error, setError] = useState(null)
 
   const connectToLedger = () => {
-    ledgerConnect.connect().then(response => {
-      const { provider, address } = response
-      const ethQuery = new Eth(provider)
+    setError(null)
 
-      setAccount(address[0])
-      ethQuery.net_version().then(chainId => setChainId(chainId))
-    })
+    ledgerConnect.connect()
+      .then(response => {
+        const { provider, address } = response
+        const ethQuery = new Eth(provider)
+
+        setAccount(address[0])
+        ethQuery.net_version().then(chainId => setChainId(chainId))
+      })
+      .catch(err => setError(err.toString()))
   }
 
   return (
@@ -30,6 +35,7 @@ function App() {
       <button onClick={connectToLedger}>Connect to Ledger</button>
       <p>accounts: {account}</p>
       <p>chainId: {chainId}</p>
+      {error && <p><strong>Error: </strong> {error} </p>}
     </div>
   );
 }
