@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@0x/subproviders": "^6.5.4",
+    "@ledgerhq/hw-app-eth": "^6.1.0",
     "@ledgerhq/hw-transport-webusb": "^6.1.0",
     "@ledgerhq/web3-subprovider": "^5.36.0-deprecated",
     "@testing-library/jest-dom": "^5.11.4",
