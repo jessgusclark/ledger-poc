@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import Eth from 'ethjs'
-
 import './App.css';
-// import LedgerConnectProvider from './LedgerConnectProvider'
-// import LedgerConnectProvider from './Ledger0xProvider'
 import LedgerProvider from './LedgerProvider'
 
 const ledgerConnectTestNet = new LedgerProvider({
@@ -27,47 +23,37 @@ function App() {
   const [provider, setProvider] = useState(null)
   const [result, setResult] = useState(null)
 
+  const handleError = (err) => {
+    console.log(err)
+    setError(err.message)
+  }
+
   const connectToLedger = async () => {
     setError(null)
     setChainId(null)
     setAccount(null)
+    setResult(null)
+    setProvider(null)
 
     const ledgerConnect = useTestnet ? ledgerConnectTestNet : ledgerConnectMainnet
 
     ledgerConnect.connect().then(() => {
-      console.log(ledgerConnect)
       ledgerConnect.request({ method: 'eth_accounts' })
         .then(accounts => setAccount(accounts[0]))
-        .catch(err => setError(err.message))
+        .catch(handleError)
       
-      ledgerConnect.request({ method: 'eth_chainId' }).then(id => setChainId(id))
+      ledgerConnect.request({ method: 'eth_chainId' })
+        .then(id => setChainId(id)).catch(handleError)
 
       setProvider(ledgerConnect)
-    }).catch(err => setError(err.message))
-
-    /*
-    ledgerConnect.connect()
-      .then(provider => {
-        // const { , address } = response
-        const ethjs = new Eth(provider)
-
-        // provider.sendAsync({method: 'eth_accounts' }, (response) => console.log(response))
-        // setAccount(address[0])
-        ethjs.accounts().then(accounts => setAccount(accounts[0]))
-        ethjs.net_version().then(chainId => setChainId(chainId))
-
-        console.log('ethjs', ethjs)
-        setProvider(ethjs)
-      })
-      .catch(err => setError(err.toString()))
-    */
+    }).catch(handleError)
   }
 
   const signMessage = () => {
-    console.log('let us sign')
-    console.log(provider)
-
-    provider.request({ method: 'personal_sign' }).then(res => setResult(res))
+    setResult(null)
+    provider.request({ method: 'personal_sign', params: ['test', account] })
+      .then(res => setResult(res))
+      .catch(handleError)
   }
 
   return (
@@ -83,7 +69,7 @@ function App() {
       <hr/>
       {provider && (
         <div>
-          <button onClick={signMessage}>Sign message</button>
+          <button onClick={signMessage}>Sign message</button><br/>
         </div>
       )}
       {result && <p><strong>Result:</strong> {result}</p>}

@@ -6,7 +6,8 @@ class LedgerProvider {
     console.log('🦄 constructor', opts)
     this.chainId = opts.chainId
     this.rpcUrl = opts.rpcUrl
-    
+    this.isLedger = true
+    this.selectedAddress = null
     this.eth = null
 
     // is the ledger using the Ethereum app or the RSK app:
@@ -20,6 +21,11 @@ class LedgerProvider {
         .then(transport => {
           this.eth = new Eth(transport)
           console.log('🦄 eth!', this.eth)
+          // this command here will prompt to connect to the ledger:
+          this.eth.getAddress(this.path)
+            .then(result => this.selectedAddress = result.address)
+            .catch(err => reject(err))
+
           resolve(true)
         })
         .catch(err => {
@@ -29,11 +35,11 @@ class LedgerProvider {
     })
   }
 
-  request(params) {
-    const method = { params }
-    console.log('🦄 request', params)
+  request(request) {
+    const { method, params } = request
+    console.log('🦄 request', request)
 
-    switch(params.method) {
+    switch(method) {
       case 'eth_accounts':
         return new Promise((resolve, reject) =>
           this.eth.getAddress(this.path)
@@ -45,7 +51,7 @@ class LedgerProvider {
 
       // reference: https://github.com/LedgerHQ/ledgerjs/tree/master/packages/hw-app-eth#signpersonalmessage
       case 'personal_sign':
-        return this.eth.signPersonalMessage(this.path, Buffer.from("test").toString("hex"))
+        return this.eth.signPersonalMessage(this.path, Buffer.from(params[0]).toString("hex"))
           .then(result => {
             let v = (result['v'] - 27).toString(16);
             if (v.length < 2) {
@@ -53,7 +59,9 @@ class LedgerProvider {
             }
             return `${result['r']}${result['s']}${v}`
           })
-      default: throw(new Error(`The method '${method}' is not supported.`))
+      
+      default:
+        throw(new Error(`The method '${method}' is not supported.`))
     }
   }
 }
