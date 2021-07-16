@@ -21,17 +21,9 @@ class LedgerProvider {
         .then(transport => {
           this.eth = new Eth(transport)
           console.log('🦄 eth!', this.eth)
-          // this command here will prompt to connect to the ledger:
-          this.eth.getAddress(this.path)
-            .then(result => this.selectedAddress = result.address)
-            .catch(err => reject(err))
-
           resolve(true)
         })
-        .catch(err => {
-          console.log('boo!', err)
-          reject(err)
-        })
+        .catch(err => reject(err))
     })
   }
 
@@ -42,8 +34,13 @@ class LedgerProvider {
     switch(method) {
       case 'eth_accounts':
         return new Promise((resolve, reject) =>
-          this.eth.getAddress(this.path)
-            .then(result => resolve([result.address])).catch(err => reject(err)))
+          this.selectedAddress
+          ? resolve(this.selectedAddress)
+          : this.eth.getAddress(this.path)
+            .then(result => {
+              this.selectedAddress = result.address
+              resolve([result.address])
+            }).catch(err => reject(err)))
 
       case 'eth_chainId':
       case 'net_version':
