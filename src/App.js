@@ -2,16 +2,20 @@ import { useState } from 'react'
 import Eth from 'ethjs'
 
 import './App.css';
-import LedgerConnectProvider from './LedgerConnectProvider'
+// import LedgerConnectProvider from './LedgerConnectProvider'
+// import LedgerConnectProvider from './Ledger0xProvider'
+import LedgerProvider from './LedgerProvider'
 
-const ledgerConnectTestNet = new LedgerConnectProvider({
+const ledgerConnectTestNet = new LedgerProvider({
   chainId: 31,
-  rpcUrl: 'https://public-node.testnet.rsk.co'
+  rpcUrl: 'https://public-node.testnet.rsk.co',
+  debug: true
 })
 
-const ledgerConnectMainnet = new LedgerConnectProvider({
+const ledgerConnectMainnet = new LedgerProvider({
   chainId: 30,
-  rpcUrl: 'https://public-node.rsk.co'
+  rpcUrl: 'https://public-node.rsk.co',
+  debug: true
 })
 
 function App() {
@@ -21,15 +25,28 @@ function App() {
   const [useTestnet, setUseTestnet] = useState(true)
   
   const [provider, setProvider] = useState(null)
+  const [result, setResult] = useState(null)
 
-  const connectToLedger = () => {
+  const connectToLedger = async () => {
     setError(null)
     setChainId(null)
     setAccount(null)
 
-    const connect = useTestnet ? ledgerConnectTestNet : ledgerConnectMainnet
+    const ledgerConnect = useTestnet ? ledgerConnectTestNet : ledgerConnectMainnet
 
-    connect.connect()
+    ledgerConnect.connect().then(() => {
+      console.log(ledgerConnect)
+      ledgerConnect.request({ method: 'eth_accounts' })
+        .then(accounts => setAccount(accounts[0]))
+        .catch(err => setError(err.message))
+      
+      ledgerConnect.request({ method: 'eth_chainId' }).then(id => setChainId(id))
+
+      setProvider(ledgerConnect)
+    }).catch(err => setError(err.message))
+
+    /*
+    ledgerConnect.connect()
       .then(provider => {
         // const { , address } = response
         const ethjs = new Eth(provider)
@@ -39,18 +56,18 @@ function App() {
         ethjs.accounts().then(accounts => setAccount(accounts[0]))
         ethjs.net_version().then(chainId => setChainId(chainId))
 
-        console.log(ethjs)
-
+        console.log('ethjs', ethjs)
         setProvider(ethjs)
       })
       .catch(err => setError(err.toString()))
+    */
   }
 
   const signMessage = () => {
     console.log('let us sign')
     console.log(provider)
-    // provider.send({ method: 'personal_sign', params: ['Hello World!', account] })
-    provider.personal_sign('Hello World', account)
+
+    provider.request({ method: 'personal_sign' }).then(res => setResult(res))
   }
 
   return (
@@ -69,6 +86,7 @@ function App() {
           <button onClick={signMessage}>Sign message</button>
         </div>
       )}
+      {result && <p><strong>Result:</strong> {result}</p>}
     </div>
   );
 }
